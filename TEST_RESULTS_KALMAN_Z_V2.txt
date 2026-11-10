@@ -1,0 +1,20 @@
+TEST RESULTS: V2 Kalman-Z guarded ALT motor feedback
+2026-11-09
+
+HOST TESTS: 21/21 passed with g++ C++17.
+- New test: test_alt_kalman_motor_path.cpp
+  - 250Hz control simulation using 50Hz ranging
+  - guard reaches KF_LIVE; ALT throttle uses selected height/vz
+  - output correction remains within +/-70 logical microseconds
+  - collective output remains within 1100..1850
+  - unhealthy Kalman causes RAW_FALLBACK_LATCHED
+  - invalid raw range makes ALT latch its existing fault
+  - recovered range cannot auto-reengage ALT after fault
+
+SYNTAX: src/control_task.cpp passed g++ -fsyntax-only -Wall -Wextra -Werror
+using local Arduino/FreeRTOS/MPU mocks in two flag combinations:
+- FC_FLIGHT_CANDIDATE=0 FC_ALT_V2_AUTHORITY=1 FC_ALT_KALMAN_ACTUATION=1
+- FC_FLIGHT_CANDIDATE=1 FC_ALT_V2_AUTHORITY=1 FC_ALT_KALMAN_ACTUATION=1
+
+NOT VERIFIED: native PlatformIO ESP32 build, firmware flash, ESC output,
+actual motor thrust, vibration/sensor noise, or free flight.

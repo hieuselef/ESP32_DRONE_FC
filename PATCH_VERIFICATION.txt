@@ -1,0 +1,14 @@
+RC STICK DIAGNOSTIC PATCH VALIDATION (2026-11-08)
+- 16/16 C++ host unit tests passed via tests/run_host_tests.sh.
+- Diff from ESP32_FC_175MM_ANGLE_ALT_POS_SHADOW_CANDIDATE:
+    MODIFIED: src/main.cpp (read-only RC diagnostic prints only)
+    ADDED: include/rc_stick_diag.h
+    ADDED: tests/test_rc_stick_diag.cpp
+    ADDED: README_RC_STICK_DIAG.md
+    ADDED: PATCH_VERIFICATION.txt
+- SHA256-identical original files: src/control_task.cpp, src/rc_task.cpp,
+  src/esc_output.cpp, src/nav_task.cpp, src/mtf_task.cpp,
+  include/config.h, include/controller_math.h, include/flight_altitude.h,
+  platformio.ini.
+- No PlatformIO/ESP32 actual build in execution environment. User should
+  compile and upload bench via VS Code, with propellers removed.

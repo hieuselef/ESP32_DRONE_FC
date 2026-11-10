@@ -1,0 +1,10 @@
+UNIFIED POS HOLD SHADOW V6.3U - 2026-11-08
+Source base: V6.3H1 RC SNAPSHOT FIX BENCH
+Feature added: Flow packet accumulator + 2x2 velocity estimator + POS hold shadow
+Host unit tests: 14 / 14 PASS (g++ -std=c++17)
+Syntax check: src/nav_task.cpp src/mtf_task.cpp src/main.cpp PASS with MOCK Arduino/FreeRTOS headers
+PlatformIO esp32dev build: NOT PERFORMED (PlatformIO toolchain unavailable)
+Hardware upload / motors / flight: NOT PERFORMED
+Motor output: FALSE, PWM:0, xy_valid:false
+Flow scale: NOT VERIFIED, POS actuation remains disabled
+Upstream LacWing GitHub code: NOT COPIED (different sensors/RC/GPIO)

@@ -1,0 +1,46 @@
+[HOST] tests/test_alt_handover.cpp
+PASS ALT->MANUAL smooth handover, full pilot bypass, hard stop and ALT fault latch
+[HOST] tests/test_alt_kalman_motor_path.cpp
+PASS Kalman Z drives guarded ALT throttle, output bounds, raw fallback latch, stale and ALT latch
+[HOST] tests/test_alt_motor_gate_v2.cpp
+PASS V2 low-stick ALT authority, manual handover, emergency/high and hard-stop priorities
+[HOST] tests/test_control_math.cpp
+PASS: rate PID signed feedback, filtered D, anti-windup, X mixer, clipping
+[HOST] tests/test_flight_candidate.cpp
+PASS flight candidate OneShot125 mapping, ALT tracking / fallback / override / no jump
+[HOST] tests/test_flow_diag.cpp
+PASS v6.2 raw flow diagnostic tests
+[HOST] tests/test_msp.cpp
+PASS: MSPv2 flow/range, signed int32, CRC rejection, recovery
+[HOST] tests/test_nav.cpp
+PASS v6.2 nav estimator tests
+[HOST] tests/test_nav_guard.cpp
+PASS v6.2 motion guard tests
+[HOST] tests/test_pos_authority_v2.cpp
+PASS POS V2: disabled, calibration gate, 300ms acquire, bounded tilt, ALT fallback, stale/latch, pilot override
+[HOST] tests/test_range_validation.cpp
+PASS signed range validation tests
+[HOST] tests/test_rc_stick_diag.cpp
+[HOST] tests/test_replay_guard_hold.cpp
+PASS V6.3 replay: disturbance -> no correction -> delayed fresh target
+[HOST] tests/test_shadow.cpp
+PASS V6.3 target stable capture / loss / recovery / low-height / mode switch
+[HOST] tests/test_unified_pos.cpp
+PASS unified POS estimator: independent scale gate, velocity, stale reset, target and safe fallback
+[HOST] tests/test_v63_capture_edges.cpp
+PASS V6.3 no stale capture, motion, spread, low-height guards
+[HOST] tests/test_v63_flow_cal.cpp
+PASS V6.3 flow axis calibration / duplicate / guards / authorization
+[HOST] tests/test_v63g_guided_flow.cpp
+PASS V6.3H manual GO, counters reset, packet capture, window filtering, orthogonality and fail-closed gates
+[HOST] tests/test_v63h1_guided_rc_gate.cpp
+V6.3H1 Guided RC gate checks passed
+[HOST] tests/test_vertical_estimator.cpp
+PASS unique range frame Kalman shadow, stale guard, re-acquire and innovation gate
+[HOST] tests/test_vertical_imu_fusion.cpp
+PASS MPU body->earth, bias calibration, motion prediction, range correction, ALT actuator and faults
+[HOST] tests/test_y_flow_probe.cpp
+PASS V6.3Y Y-axis packet capture / stationary/move separation / abort gates
+
+[MOCK SYNTAX] control_task.cpp legacy and IMU fused candidate: PASS
+[SUMMARY] 22 host test binaries passed

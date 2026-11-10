@@ -1,0 +1,6 @@
+V6.3H1 RC SNAPSHOT FIX BENCH
+13/13 native C++ tests passed with g++ -std=c++17.
+Includes focused tests for RC snapshot cache <=80ms, link loss, CH5/CH6 mode,
+ARM high, and expired RC packets. All existing 12 tests passed.
+PlatformIO ESP32 device build and real hardware upload: NOT run in this environment.
+PWM hard locked OFF; XY position control OFF.

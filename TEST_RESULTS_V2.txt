@@ -1,0 +1,12 @@
+V2 verification, generated in current session
+- Base firmware: ESP32_FC_175MM_FLIGHT_CANDIDATE_ALT_HANDOVER_FIX.zip
+- All test files: 19/19 PASS (g++ -std=c++17 -Wall -Wextra -O2)
+- New: test_alt_motor_gate_v2.cpp PASS
+- New: test_vertical_estimator.cpp PASS
+- Core control_task.cpp syntax-check with Arduino/MPU host MOCKS:
+  * bench (FC_FLIGHT_CANDIDATE=0 FC_ALT_V2_AUTHORITY=1): PASS
+  * flight_candidate (FC_FLIGHT_CANDIDATE=1 FC_ALT_V2_AUTHORITY=0): PASS
+  * flight_alt_v2_candidate (FC_FLIGHT_CANDIDATE=1 FC_ALT_V2_AUTHORITY=1): PASS
+- NOT DONE: PlatformIO full build with real ESP32 Arduino packages and libraries.
+- NOT DONE: hardware ESC validation, failsafe validation, any flight validation.
+- Keep POS_HOLD_ACTUATION_ENABLED false.

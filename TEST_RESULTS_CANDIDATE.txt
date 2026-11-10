@@ -1,0 +1,10 @@
+ESP32 FC 175mm ANGLE+ALT + POS shadow - candidate audit 2026-11-08
+- Host C++ tests: 15/15 passed with g++17 on Linux.
+- Syntax with Arduino/FreeRTOS mock interfaces: control_task.cpp, esc_output.cpp, nav_task.cpp passed at FC_FLIGHT_CANDIDATE=0 and =1.
+- POS feedback never referenced in control_task.cpp; POS_HOLD_ACTUATION_ENABLED=false and xy_valid=false are hard-locked.
+- Default env bench cannot attach ESC output (ENABLE_MOTOR_OUTPUT=false).
+- Experimental flight_candidate env attaches 4 OneShot125 outputs at 480Hz and connects ANGLE + ALT throttle to mixer.
+- Not built by PlatformIO in this runtime; no full firmware dependency/link verification.
+- Not flashed to ESP32, not measured with scope, no HIL, no outdoor flight testing.
+- Flight controller PID gains, motor numbering, axis signs, ESC timing and ALT stability are NOT independently verified.
+- Not equivalent to user's previously successful esp-fc build.

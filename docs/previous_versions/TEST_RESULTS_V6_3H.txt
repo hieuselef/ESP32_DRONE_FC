@@ -1,0 +1,5 @@
+V6.3H MANUAL GO BENCH
+All 12 native C++ unit tests passed using g++ -std=c++17 on 2026-11-08.
+Includes manual GO, ready timeout, safety gates, packet-rate Flow and collinearity tests.
+PlatformIO/ESP32 device build and real hardware upload have NOT been run in this environment.
+Motor output remains HARD LOCKED, XY position control is disabled.

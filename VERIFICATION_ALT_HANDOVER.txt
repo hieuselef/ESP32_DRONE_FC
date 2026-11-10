@@ -1,0 +1,29 @@
+ALT HOLD Handover Patch - Verification
+Host tests: 17/17 PASS (g++ -std=c++17, -Wall -Wextra)
+C++11 new test: PASS
+control_task.cpp syntax check (Arduino/FreeRTOS mocks): bench PASS, flight_candidate PASS
+PlatformIO/ESP32 real build: NOT PERFORMED (not installed here)
+ESC timing, ISR, motor pin wiring, flight stability: NOT VERIFIED on physical board
+
+Original: ESP32_FC_175MM_FLIGHT_CANDIDATE_RC_STICK_DIAG
+Changes: flight_altitude.h / throttle_handover.h / control_task.cpp / types.h / main.cpp; test_alt_handover.cpp
+All other firmware source modules unchanged.
+
+Unit tests:
+[HOST] tests/test_alt_handover.cpp
+[HOST] tests/test_control_math.cpp
+[HOST] tests/test_flight_candidate.cpp
+[HOST] tests/test_flow_diag.cpp
+[HOST] tests/test_msp.cpp
+[HOST] tests/test_nav.cpp
+[HOST] tests/test_nav_guard.cpp
+[HOST] tests/test_range_validation.cpp
+[HOST] tests/test_rc_stick_diag.cpp
+[HOST] tests/test_replay_guard_hold.cpp
+[HOST] tests/test_shadow.cpp
+[HOST] tests/test_unified_pos.cpp
+[HOST] tests/test_v63_capture_edges.cpp
+[HOST] tests/test_v63_flow_cal.cpp
+[HOST] tests/test_v63g_guided_flow.cpp
+[HOST] tests/test_v63h1_guided_rc_gate.cpp
+[HOST] tests/test_y_flow_probe.cpp
