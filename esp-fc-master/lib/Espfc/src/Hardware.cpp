@@ -1,0 +1,213 @@
+#include "Hardware.h"
+#include "Device/Baro/BaroBMP085.hpp"
+#include "Device/Baro/BaroBMP280.hpp"
+#include "Device/Baro/BaroSPL06.hpp"
+#include "Device/BaroDevice.hpp"
+#include "Device/Gyro/GyroBMI160.hpp"
+#include "Device/Gyro/GyroICM20602.hpp"
+#include "Device/Gyro/GyroICM42688.hpp"
+#include "Device/Gyro/GyroLSM6DSO.hpp"
+#include "Device/Gyro/GyroMPU6050.hpp"
+#include "Device/Gyro/GyroMPU6500.hpp"
+#include "Device/Gyro/GyroMPU9250.hpp"
+#include "Device/GyroDevice.hpp"
+#include "Device/Mag/MagAK8963.hpp"
+#include "Device/Mag/MagHMC5883L.hpp"
+#include "Device/Mag/MagQMC5883L.hpp"
+#include "Device/Mag/MagQMC5883P.hpp"
+#include "Hal/Board.hpp"
+#include "Hal/Gpio.hpp"
+#include "Hal/Time.hpp"
+#include "Hal/Wifi.hpp"
+
+namespace {
+static Espfc::Device::BusSlave gyroSlaveBus;
+static Espfc::Device::Gyro::GyroMPU6050 mpu6050;
+static Espfc::Device::Gyro::GyroMPU6500 mpu6500;
+static Espfc::Device::Gyro::GyroMPU9250 mpu9250;
+static Espfc::Device::Gyro::GyroLSM6DSO lsm6dso;
+static Espfc::Device::Gyro::GyroICM20602 icm20602;
+static Espfc::Device::Gyro::GyroICM42688 icm42688;
+static Espfc::Device::Gyro::GyroBMI160 bmi160;
+static Espfc::Device::Mag::MagHMC5883L hmc5883l;
+static Espfc::Device::Mag::MagQMC5883L qmc5883l;
+static Espfc::Device::Mag::MagQMC5883P qmc5883p;
+static Espfc::Device::Mag::MagAK8963 ak8963;
+static Espfc::Device::Baro::BaroBMP085 bmp085;
+static Espfc::Device::Baro::BaroBMP280 bmp280;
+static Espfc::Device::Baro::BaroSPL06 spl06;
+} // namespace
+
+namespace Espfc {
+
+Hardware::Hardware(Model& model): _model(model) {}
+
+int Hardware::begin()
+{
+  initBus();
+  detectGyro();
+  detectMag();
+  detectBaro();
+  return 1;
+}
+
+void Hardware::onI2CError()
+{
+  _model.state.i2cErrorCount++;
+  _model.state.i2cErrorDelta++;
+}
+
+void Hardware::initBus()
+{
+#if defined(ESPFC_SPI_0)
+  auto* spiBus = Hal::getBusSPI(0);
+  int spiResult = spiBus->begin(_model.config.pin[PIN_SPI_0_SCK], _model.config.pin[PIN_SPI_0_MOSI],
+                                _model.config.pin[PIN_SPI_0_MISO]);
+  if (spiResult)
+  {
+    _spiBus = spiBus;
+  }
+
+  {
+    auto& logger = spiResult ? _model.logger.info() : _model.logger.err();
+    logger.log("SPI")
+        .log(_model.config.pin[PIN_SPI_0_SCK])
+        .log(_model.config.pin[PIN_SPI_0_MOSI])
+        .log(_model.config.pin[PIN_SPI_0_MISO])
+        .logln(spiResult);
+  }
+#endif
+
+#if defined(ESPFC_I2C_0)
+  auto* i2cBus = Hal::getBusI2C(0);
+  int i2cResult = i2cBus->begin(_model.config.pin[PIN_I2C_0_SDA], _model.config.pin[PIN_I2C_0_SCL],
+                                _model.config.i2cSpeed * 1000ul);
+
+  if (i2cResult)
+  {
+    _i2cBus = i2cBus;
+    _i2cBus->onError = [this]() { onI2CError(); };
+  }
+  {
+    auto& logger = i2cResult ? _model.logger.info() : _model.logger.err();
+    logger.log("I2C")
+        .log(_model.config.pin[PIN_I2C_0_SDA])
+        .log(_model.config.pin[PIN_I2C_0_SCL])
+        .log(_model.config.i2cSpeed)
+        .logln(i2cResult);
+  }
+#endif
+}
+
+void Hardware::detectGyro()
+{
+  if (_model.config.gyro.dev == GYRO_NONE) return;
+
+  Device::GyroDevice* detectedGyro = nullptr;
+#if defined(ESPFC_SPI_0)
+  if (_spiBus && _model.config.pin[PIN_SPI_CS0] != -1)
+  {
+    Hal::Gpio::digitalWrite(_model.config.pin[PIN_SPI_CS0], Hal::Gpio::High);
+    Hal::Gpio::pinMode(_model.config.pin[PIN_SPI_CS0], Hal::Gpio::Output);
+    if (!detectedGyro && detectDevice(mpu9250, _spiBus, _model.config.pin[PIN_SPI_CS0])) detectedGyro = &mpu9250;
+    if (!detectedGyro && detectDevice(mpu6500, _spiBus, _model.config.pin[PIN_SPI_CS0])) detectedGyro = &mpu6500;
+    if (!detectedGyro && detectDevice(icm20602, _spiBus, _model.config.pin[PIN_SPI_CS0])) detectedGyro = &icm20602;
+    if (!detectedGyro && detectDevice(icm42688, _spiBus, _model.config.pin[PIN_SPI_CS0])) detectedGyro = &icm42688;
+    if (!detectedGyro && detectDevice(bmi160, _spiBus, _model.config.pin[PIN_SPI_CS0])) detectedGyro = &bmi160;
+    if (!detectedGyro && detectDevice(lsm6dso, _spiBus, _model.config.pin[PIN_SPI_CS0])) detectedGyro = &lsm6dso;
+    if (detectedGyro) gyroSlaveBus.begin(_spiBus, detectedGyro->getAddress());
+  }
+#endif
+#if defined(ESPFC_I2C_0)
+  if (!detectedGyro && _i2cBus && _model.config.pin[PIN_I2C_0_SDA] != -1 && _model.config.pin[PIN_I2C_0_SCL] != -1)
+  {
+    if (!detectedGyro && detectDevice(mpu9250, _i2cBus)) detectedGyro = &mpu9250;
+    if (!detectedGyro && detectDevice(mpu6500, _i2cBus)) detectedGyro = &mpu6500;
+    if (!detectedGyro && detectDevice(icm20602, _i2cBus)) detectedGyro = &icm20602;
+    if (!detectedGyro && detectDevice(bmi160, _i2cBus)) detectedGyro = &bmi160;
+    if (!detectedGyro && detectDevice(mpu6050, _i2cBus)) detectedGyro = &mpu6050;
+    if (!detectedGyro && detectDevice(lsm6dso, _i2cBus)) detectedGyro = &lsm6dso;
+    if (detectedGyro) gyroSlaveBus.begin(_i2cBus, detectedGyro->getAddress());
+  }
+#endif
+  if (!detectedGyro) return;
+
+  detectedGyro->setDLPFMode(_model.config.gyro.dlpf);
+  _model.state.gyro.dev = detectedGyro;
+  _model.state.gyro.present = (bool)detectedGyro;
+  _model.state.accel.present = _model.state.gyro.present && _model.config.accel.dev != GYRO_NONE;
+  _model.state.gyro.clock = detectedGyro->getRate();
+}
+
+void Hardware::detectMag()
+{
+  if (_model.config.mag.dev == MAG_NONE) return;
+
+  Device::MagDevice* detectedMag = nullptr;
+#if defined(ESPFC_I2C_0)
+  if (_i2cBus && _model.config.pin[PIN_I2C_0_SDA] != -1 && _model.config.pin[PIN_I2C_0_SCL] != -1)
+  {
+    if (!detectedMag && detectDevice(ak8963, _i2cBus)) detectedMag = &ak8963;
+    if (!detectedMag && detectDevice(hmc5883l, _i2cBus)) detectedMag = &hmc5883l;
+    if (!detectedMag && detectDevice(qmc5883l, _i2cBus)) detectedMag = &qmc5883l;
+    if (!detectedMag && detectDevice(qmc5883p, _i2cBus)) detectedMag = &qmc5883p;
+  }
+#endif
+  if (gyroSlaveBus.getBus())
+  {
+    if (!detectedMag && detectDevice(ak8963, &gyroSlaveBus)) detectedMag = &ak8963;
+    if (!detectedMag && detectDevice(hmc5883l, &gyroSlaveBus)) detectedMag = &hmc5883l;
+    if (!detectedMag && detectDevice(qmc5883l, &gyroSlaveBus)) detectedMag = &qmc5883l;
+    if (!detectedMag && detectDevice(qmc5883p, &gyroSlaveBus)) detectedMag = &qmc5883p;
+  }
+  _model.state.mag.dev = detectedMag;
+  _model.state.mag.present = (bool)detectedMag;
+  _model.state.mag.rate = detectedMag ? detectedMag->getRate() : 0;
+}
+
+void Hardware::detectBaro()
+{
+  if (_model.config.baro.dev == BARO_NONE) return;
+
+  Device::BaroDevice* detectedBaro = nullptr;
+#if defined(ESPFC_SPI_0)
+  if (_spiBus && _model.config.pin[PIN_SPI_CS1] != -1)
+  {
+    Hal::Gpio::digitalWrite(_model.config.pin[PIN_SPI_CS1], Hal::Gpio::High);
+    Hal::Gpio::pinMode(_model.config.pin[PIN_SPI_CS1], Hal::Gpio::Output);
+    if (!detectedBaro && detectDevice(bmp280, _spiBus, _model.config.pin[PIN_SPI_CS1])) detectedBaro = &bmp280;
+    if (!detectedBaro && detectDevice(bmp085, _spiBus, _model.config.pin[PIN_SPI_CS1])) detectedBaro = &bmp085;
+    if (!detectedBaro && detectDevice(spl06, _spiBus, _model.config.pin[PIN_SPI_CS1])) detectedBaro = &spl06;
+  }
+#endif
+#if defined(ESPFC_I2C_0)
+  if (_i2cBus && _model.config.pin[PIN_I2C_0_SDA] != -1 && _model.config.pin[PIN_I2C_0_SCL] != -1)
+  {
+    if (!detectedBaro && detectDevice(bmp280, _i2cBus)) detectedBaro = &bmp280;
+    if (!detectedBaro && detectDevice(bmp085, _i2cBus)) detectedBaro = &bmp085;
+    if (!detectedBaro && detectDevice(spl06, _i2cBus)) detectedBaro = &spl06;
+  }
+#endif
+  if (gyroSlaveBus.getBus())
+  {
+    if (!detectedBaro && detectDevice(bmp280, &gyroSlaveBus)) detectedBaro = &bmp280;
+    if (!detectedBaro && detectDevice(bmp085, &gyroSlaveBus)) detectedBaro = &bmp085;
+    if (!detectedBaro && detectDevice(spl06, &gyroSlaveBus)) detectedBaro = &spl06;
+  }
+
+  _model.state.baro.dev = detectedBaro;
+  _model.state.baro.present = (bool)detectedBaro;
+}
+
+void Hardware::restart(const Model& model)
+{
+  if (model.state.mixer.escMotor) model.state.mixer.escMotor->end();
+  if (model.state.mixer.escServo) model.state.mixer.escServo->end();
+#ifdef ESPFC_SERIAL_SOFT_0_WIFI
+  Hal::Wifi::stop();
+#endif
+  delay(100);
+  Hal::Board::reset();
+}
+
+} // namespace Espfc
